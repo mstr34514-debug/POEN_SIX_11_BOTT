@@ -1,0 +1,395 @@
+```html
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OPEN SIX BOT - Telegram Mini App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & Hind Siliguri) -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#060913',
+                            800: '#0b0f19',
+                            700: '#151c2e'
+                        },
+                        brand: {
+                            red: '#ff2a5f',
+                            blue: '#00a3ff',
+                            purple: '#7928ca'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Hind Siliguri', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #060913;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism styling */
+        .glass-card {
+            background: rgba(21, 28, 46, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+
+        .glass-nav {
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Red Blue Gradient Effects */
+        .gradient-text {
+            background: linear-gradient(135deg, #ff2a5f 0%, #00a3ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, #ff2a5f 0%, #00a3ff 100%);
+            box-shadow: 0 4px 15px rgba(255, 42, 95, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .gradient-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(0, 163, 255, 0.4);
+        }
+
+        /* Tap Button Glowing Effects */
+        .tap-glow {
+            box-shadow: 0 0 35px rgba(255, 42, 95, 0.35), 0 0 15px rgba(0, 163, 255, 0.3);
+            transition: transform 0.05s ease, box-shadow 0.1s ease;
+        }
+
+        .tap-glow:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 50px rgba(255, 42, 95, 0.6), 0 0 25px rgba(0, 163, 255, 0.5);
+        }
+
+        /* Floating Tap Indicator Animation */
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+        }
+
+        .tap-float-num {
+            position: absolute;
+            font-weight: 800;
+            font-size: 1.75rem;
+            color: #00a3ff;
+            text-shadow: 0 0 10px #ff2a5f;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 50;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #060913;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #151c2e;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between pb-20">
+
+    <!-- Top Status Bar -->
+    <header class="p-4 glass-card mx-3 mt-3 flex items-center justify-between z-10">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-brand-red to-brand-blue flex items-center justify-center font-bold text-white shadow-lg">
+                OS
+            </div>
+            <div>
+                <h1 class="font-bold text-sm tracking-wide flex items-center">
+                    <span id="user-display-name">User_OS</span>
+                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-blue/20 text-brand-blue font-semibold border border-brand-blue/30" id="user-level-badge">Lvl 1</span>
+                </h1>
+                <p class="text-xs text-gray-400" id="user-tg-id">ID: 8492019</p>
+            </div>
+        </div>
+        <button onclick="toggleLanguage()" class="px-2.5 py-1 text-xs glass-card border border-white/10 rounded-lg text-gray-300 hover:text-white flex items-center gap-1">
+            <i class="fa-solid fa-globe text-brand-blue"></i>
+            <span id="lang-btn-text">BN</span>
+        </button>
+    </header>
+
+    <!-- Ad Timer Bar (10 Minute Scheduler Tracker) -->
+    <div class="mx-3 mt-2 glass-card p-2 flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-rectangle-ad text-brand-red animate-pulse"></i>
+            <span class="text-gray-300" id="next-ad-label">পরবর্তী বিজ্ঞাপন:</span>
+        </div>
+        <div class="font-mono text-brand-blue font-bold" id="ad-timer-countdown">10:00</div>
+    </div>
+
+    <!-- Main Content Containers -->
+    <main class="flex-1 p-3 overflow-y-auto" id="app-container">
+
+        <!-- 1. HOME DASHBOARD -->
+        <section id="sec-home" class="space-y-4">
+            <!-- Points Counter -->
+            <div class="text-center py-2">
+                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider" id="label-balance-title">মোট ব্যালেন্স</p>
+                <div class="flex items-center justify-center gap-2 mt-1">
+                    <i class="fa-solid fa-coins text-2xl text-yellow-400"></i>
+                    <span class="text-4xl font-extrabold tracking-tight gradient-text" id="pts-balance">0</span>
+                </div>
+            </div>
+
+            <!-- Tap Interaction Zone -->
+            <div class="relative flex justify-center items-center my-6 min-h-[220px]">
+                <button id="tap-button" class="w-52 h-52 rounded-full bg-gradient-to-tr from-brand-red via-navy-800 to-brand-blue p-1.5 tap-glow relative group">
+                    <div class="w-full h-full rounded-full bg-navy-900 flex flex-col items-center justify-center border border-white/10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-brand-blue/10 to-brand-red/10 opacity-50"></div>
+                        <i class="fa-solid fa-bolt text-5xl text-brand-blue group-hover:scale-110 transition-transform mb-1"></i>
+                        <span class="font-extrabold text-2xl tracking-wider gradient-text">OPEN SIX</span>
+                        <span class="text-[10px] text-gray-400 uppercase mt-0.5" id="label-tap-hint">ট্যাপ করুন</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Energy Meter & Level Progress -->
+            <div class="space-y-3">
+                <div class="glass-card p-3 space-y-2">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 text-gray-300">
+                            <i class="fa-solid fa-battery-half text-brand-blue"></i> <span id="label-energy">এনার্জি</span>
+                        </span>
+                        <span class="text-brand-blue font-mono"><span id="energy-val">1000</span> / <span id="energy-max">1000</span></span>
+                    </div>
+                    <div class="w-full bg-navy-900 rounded-full h-2.5 overflow-hidden p-0.5 border border-white/5">
+                        <div id="energy-bar" class="bg-gradient-to-r from-brand-red to-brand-blue h-full rounded-full transition-all duration-200" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Stats Summary Row -->
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="glass-card p-2.5">
+                        <p class="text-gray-400 text-[10px]" id="lbl-mult">গুণক</p>
+                        <p class="font-bold text-brand-blue text-sm mt-0.5" id="val-multiplier">x1</p>
+                    </div>
+                    <div class="glass-card p-2.5">
+                        <p class="text-gray-400 text-[10px]" id="lbl-streak">স্ট্রিক</p>
+                        <p class="font-bold text-yellow-400 text-sm mt-0.5"><span id="val-streak">1</span> দিন</p>
+                    </div>
+                    <div class="glass-card p-2.5">
+                        <p class="text-gray-400 text-[10px]" id="lbl-rank">র‍্যাংক</p>
+                        <p class="font-bold text-brand-red text-sm mt-0.5">#<span id="val-rank">99+</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. EARN & DAILY REWARDS -->
+        <section id="sec-earn" class="hidden space-y-4">
+            <h2 class="text-lg font-bold border-l-4 border-brand-red pl-2" id="title-earn">দৈনিক রিওয়ার্ড ও পুরস্কার</h2>
+            
+            <!-- 7 Day Check-in Calendar -->
+            <div class="glass-card p-4 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-brand-blue"></i> <span id="lbl-7day">৭ দিনের লগইন বোনাস</span>
+                    </h3>
+                    <span class="text-xs text-yellow-400 font-medium" id="streak-status">দিন ১ প্রস্তুত</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                    <div class="glass-card p-2 border-brand-blue/50 bg-brand-blue/10 rounded-lg">
+                        <p class="text-[10px] text-gray-400">দিন ১</p>
+                        <p class="font-bold text-yellow-400 mt-1">100</p>
+                    </div>
+                    <div class="glass-card p-2 opacity-60">
+                        <p class="text-[10px] text-gray-400">দিন ২</p>
+                        <p class="font-bold text-yellow-400 mt-1">200</p>
+                    </div>
+                    <div class="glass-card p-2 opacity-60">
+                        <p class="text-[10px] text-gray-400">দিন ৩</p>
+                        <p class="font-bold text-yellow-400 mt-1">300</p>
+                    </div>
+                    <div class="glass-card p-2 opacity-60">
+                        <p class="text-[10px] text-gray-400">দিন ৪</p>
+                        <p class="font-bold text-yellow-400 mt-1">500</p>
+                    </div>
+                    <div class="glass-card p-2 opacity-60">
+                        <p class="text-[10px] text-gray-400">দিন ৫</p>
+                        <p class="font-bold text-yellow-400 mt-1">750</p>
+                    </div>
+                    <div class="glass-card p-2 opacity-60">
+                        <p class="text-[10px] text-gray-400">দিন ৬</p>
+                        <p class="font-bold text-yellow-400 mt-1">1,000</p>
+                    </div>
+                    <div class="glass-card p-2 col-span-2 bg-gradient-to-r from-brand-red/20 to-brand-blue/20 border-brand-red/40">
+                        <p class="text-[10px] text-brand-red font-bold">দিন ৭ (মেগা)</p>
+                        <p class="font-extrabold text-yellow-400 mt-1">2,500</p>
+                    </div>
+                </div>
+                <button id="btn-claim-daily" onclick="claimDailyReward()" class="w-full gradient-btn py-2.5 rounded-lg text-sm font-bold mt-2">
+                    রিওয়ার্ড দাবি করুন
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. TASKS -->
+        <section id="sec-tasks" class="hidden space-y-4">
+            <h2 class="text-lg font-bold border-l-4 border-brand-blue pl-2" id="title-tasks">উপলব্ধ টাস্কসমূহ</h2>
+            
+            <div class="space-y-2.5" id="task-list-container">
+                <!-- Sample Task Items -->
+                <div class="glass-card p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-brand-blue">
+                            <i class="fa-brands fa-telegram text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold">অফিসিয়াল টেলিগ্রাম চ্যানেল</h4>
+                            <p class="text-[10px] text-yellow-400 font-semibold">+500 OPEN SIX Points</p>
+                        </div>
+                    </div>
+                    <button onclick="completeTask(this, 500, 'https://t.me')" class="px-3 py-1.5 gradient-btn rounded-lg text-xs font-bold">
+                        সম্পন্ন করুন
+                    </button>
+                </div>
+
+                <div class="glass-card p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-brand-red">
+                            <i class="fa-brands fa-youtube text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold">ইউটিউব চ্যানেল সাবস্ক্রাইব</h4>
+                            <p class="text-[10px] text-yellow-400 font-semibold">+1,000 Points</p>
+                        </div>
+                    </div>
+                    <button onclick="completeTask(this, 1000, 'https://youtube.com')" class="px-3 py-1.5 gradient-btn rounded-lg text-xs font-bold">
+                        সম্পন্ন করুন
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. REFERRALS / FRIENDS -->
+        <section id="sec-friends" class="hidden space-y-4">
+            <h2 class="text-lg font-bold border-l-4 border-brand-red pl-2" id="title-friends">বন্ধুদের রেফার করুন</h2>
+            
+            <div class="glass-card p-4 text-center space-y-3">
+                <i class="fa-solid fa-users-viewfinder text-4xl text-brand-blue"></i>
+                <h3 class="font-bold text-sm" id="lbl-ref-title">প্রতি সফল রেফারে ১,০০০ পয়েন্ট অর্জন করুন!</h3>
+                <p class="text-xs text-gray-400" id="lbl-ref-desc">আপনার অনন্য রেফারেল লিংক বন্ধুদের সাথে শেয়ার করুন এবং বোনাস পয়েন্ট জিতুন।</p>
+                
+                <div class="bg-navy-900 p-2.5 rounded-lg border border-white/10 flex items-center justify-between text-xs">
+                    <span class="truncate text-gray-300 font-mono pr-2" id="ref-link-text">https://t.me/OPEN_SIX_BOT?start=REF_8492019</span>
+                    <button onclick="copyRefLink()" class="px-3 py-1.5 bg-brand-blue/20 text-brand-blue hover:bg-brand-blue/30 rounded font-bold border border-brand-blue/40">
+                        কপি
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                <div class="glass-card p-3">
+                    <p class="text-gray-400 text-[10px]" id="lbl-ref-count">মোট রেফারেল</p>
+                    <p class="text-lg font-bold text-brand-blue mt-1" id="val-ref-count">0</p>
+                </div>
+                <div class="glass-card p-3">
+                    <p class="text-gray-400 text-[10px]" id="lbl-ref-earn">রেফারেল আয়</p>
+                    <p class="text-lg font-bold text-yellow-400 mt-1" id="val-ref-earn">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. LEADERBOARD -->
+        <section id="sec-leaderboard" class="hidden space-y-4">
+            <h2 class="text-lg font-bold border-l-4 border-yellow-400 pl-2" id="title-lb">শীর্ষ লিডারবোর্ড</h2>
+            
+            <div class="space-y-2" id="leaderboard-container">
+                <!-- Top 3 Example List -->
+                <div class="glass-card p-3 flex items-center justify-between border-yellow-400/40 bg-yellow-400/5">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-extrabold text-yellow-400 w-5 text-center">1</span>
+                        <div class="w-8 h-8 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center font-bold text-xs">
+                            RA
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold">Rahim Ahmed</p>
+                            <p class="text-[10px] text-gray-400">Level 5</p>
+                        </div>
+                    </div>
+                    <p class="font-extrabold text-xs text-yellow-400">125,400</p>
+                </div>
+
+                <div class="glass-card p-3 flex items-center justify-between border-gray-300/30">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-extrabold text-gray-300 w-5 text-center">2</span>
+                        <div class="w-8 h-8 rounded-full bg-gray-300/20 text-gray-300 flex items-center justify-center font-bold text-xs">
+                            SK
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold">Sumon Khan</p>
+                            <p class="text-[10px] text-gray-400">Level 4</p>
+                        </div>
+                    </div>
+                    <p class="font-extrabold text-xs text-gray-300">98,200</p>
+                </div>
+
+                <div class="glass-card p-3 flex items-center justify-between border-amber-600/30">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-extrabold text-amber-600 w-5 text-center">3</span>
+                        <div class="w-8 h-8 rounded-full bg-amber-600/20 text-amber-600 flex items-center justify-center font-bold text-xs">
+                            TC
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold">Tanvir Chowdhury</p>
+                            <p class="text-[10px] text-gray-400">Level 4</p>
+                        </div>
+                    </div>
+                    <p class="font-extrabold text-xs text-amber-600">84,100</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. WALLET -->
+        <section id="sec-wallet" class="hidden space-y-4">
+            <h2 class="text-lg font-bold border-l-4 border-brand-blue pl-2" id="title-wallet">মাই ওয়ালেট</h2>
+            
+            <div class="glass-card p-4 text-center space-y-3">
+                <p class="text-xs text-gray-400" id="lbl-w-bal">বর্তমান প্রত্যাহারযোগ্য পয়েন্ট</p>
+                <div class="text-3xl font-extrabold gradient-text" id="wallet-pts-display">0</div>
+                <button onclick="openWithdrawModal()" class="w-full gradient-btn py-2.5 rounded-lg text-xs font-bold mt-2">
+                    উইথড্র রিকোয়েস্ট করুন
+                </button>
+            </div>
+
+            <!-- Transaction History Ledger -->
+            <div class="glass-card p-3 space-y-2">
+                <h3 class="text-xs font-bold text-gray-300 border-b border-white/10 pb-2" id="lbl-tx-history">লেনদেনের ইতিহাস</h3>
+                <div class="space-y-2 text-xs" id="tx-hi
